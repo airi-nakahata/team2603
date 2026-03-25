@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="jp.co.internous.framepj.model.mapper.TblPurchaseHistoryMapper">
+
+	<insert id="insert" useGeneratedKeys="true">
+		INSERT INTO tbl_purchase_history
+		(user_id, product_id, product_count, price, destination_id, purchased_at)
+		SELECT
+		c.user_id, c.product_id, c.product_count, p.price, #{destinationId}, now()
+		FROM
+		tbl_cart c
+		JOIN
+		mst_product p ON c.product_id = p.id
+		WHERE
+		c.user_id = #{userId}
+	</insert>
+
+	<select id="findByUserId"
+		resultType="jp.co.internous.framepj.model.domain.dto.PurchaseHistoryDto">
+
+		SELECT
+		ph.purchased_at AS purchasedAt,
+		p.product_name AS
+		productName,
+		ph.price AS price,
+		ph.product_count AS productCount,
+		d.family_name AS familyName,
+		d.first_name AS firstName,
+		d.address AS
+		address
+		FROM tbl_purchase_history ph
+		JOIN mst_product p
+		ON ph.product_id
+		= p.id
+		JOIN mst_destination d
+		ON ph.destination_id = d.id
+		WHERE
+		ph.user_id = #{userId}
+		AND ph.status = 1
+		ORDER BY ph.purchased_at DESC
+	</select>
+
+	<update id="logicalDeleteByUserId">
+		UPDATE tbl_purchase_history
+		SET status = 0,
+		updated_at = NOW()
+		WHERE user_id = #{userId}
+	</update>
+</mapper>
